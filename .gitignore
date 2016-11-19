@@ -1,0 +1,16 @@
+### Intellij ###
+.idea
+out/
+decision-tree-learning.iml
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbproject/
+nbactions.xml
+build.xml
+manifest.mf
+.nb-gradle/
