@@ -25,7 +25,7 @@ public class Main {
     public static void main(String args[]) {
         Main m = new Main();
 
-        Instances data = m.loadData("data/weather.numeric.arff");
+        Instances data = m.loadData("data/weather.nominal.arff");
 
         MyKMeans kmeans = new MyKMeans(2);
 

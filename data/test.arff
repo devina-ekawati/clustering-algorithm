@@ -5,6 +5,7 @@
 @attribute atr3 {stretch, dip}
 @attribute atr4 {adult, child}
 
+@data
 yellow,small,stretch,adult
 yellow,small,stretch,child
 yellow,small,dip,adult

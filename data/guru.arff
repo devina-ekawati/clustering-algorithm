@@ -1,0 +1,16 @@
+@RELATION guru
+
+@ATTRIBUTE pengalaman	{ya, tidak}
+@ATTRIBUTE programming 	{ya, tidak}
+@ATTRIBUTE inggris 	{ya, tidak}
+@ATTRIBUTE butawarna	{ya, tidak}
+@ATTRIBUTE menikah 	{ya, tidak}
+
+@DATA
+tidak,ya,ya,tidak,tidak
+tidak,tidak,ya,tidak,ya
+ya,ya,tidak,ya,ya
+tidak,tidak,tidak,ya,ya
+ya,tidak,ya,ya,ya
+tidak,ya,tidak,ya,tidak
+
