@@ -1,0 +1,21 @@
+@relation test
+
+@attribute atr1 {yellow, purple}
+@attribute atr2 {small, large}
+@attribute atr3 {stretch, dip}
+@attribute atr4 {adult, child}
+
+yellow,small,stretch,adult
+yellow,small,stretch,child
+yellow,small,dip,adult
+yellow,small,dip,child
+yellow,large,stretch,child
+yellow,large,dip,adult
+yellow,large,dip,child
+purple,small,stretch,adult
+purple,small,stretch,child
+purple,small,dip,child
+purple,large,stretch,adult
+purple,large,stretch,child
+purple,large,dip,adult
+purple,large,dip,child 
