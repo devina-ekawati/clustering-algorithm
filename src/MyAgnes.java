@@ -3,6 +3,7 @@ import weka.clusterers.AbstractClusterer;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.Clusterer;
 import weka.core.Capabilities;
+import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
@@ -27,7 +28,8 @@ public class MyAgnes extends AbstractClusterer {
 
     int linkType = SINGLE;
     ArrayList<ArrayList<ArrayList<Instance>>> clustersHierarchy = new ArrayList<>();
-    HashMap<Instance, HashMap<Instance, Double>> distanceMatrix;
+    //DIST HashMap<Instance, HashMap<Instance, Double>> distanceMatrix;
+    EuclideanDistance euclideanDistance;
 
     public int getLinkType() {
         return linkType;
@@ -42,7 +44,8 @@ public class MyAgnes extends AbstractClusterer {
             clusters.add(new ArrayList<>(Arrays.asList(instance)));
         }
 
-        distanceMatrix = calculateDistanceMatrix(instances);
+        euclideanDistance = new EuclideanDistance(instances);
+        //DIST distanceMatrix = calculateDistanceMatrix(instances);
         joinNeighbor(clusters);
     }
 
@@ -161,10 +164,21 @@ public class MyAgnes extends AbstractClusterer {
 
     private double calculateClusterDistance(ArrayList<Instance> clusterA, ArrayList<Instance> clusterB) {
         // System.out.println("Calculate cluster distance");
-        double distance = distanceMatrix.get(clusterA.get(0)).get(clusterB.get(0));
+//        double distance = distanceMatrix.get(clusterA.get(0)).get(clusterB.get(0));
+//        for(int i=0; i<clusterA.size(); i++) {
+//            for(int j=0; j<clusterB.size(); j++) {
+//                double newDistance = distanceMatrix.get(clusterA.get(i)).get(clusterB.get(j));
+//                if (linkType == SINGLE && newDistance < distance) {
+//                    distance = newDistance;
+//                } else if (linkType == COMPLETE && newDistance > distance) {
+//                    distance = newDistance;
+//                }
+//            }
+//        }
+        double distance = euclideanDistance.distance(clusterA.get(0), clusterB.get(0));
         for(int i=0; i<clusterA.size(); i++) {
             for(int j=0; j<clusterB.size(); j++) {
-                double newDistance = distanceMatrix.get(clusterA.get(i)).get(clusterB.get(j));
+                double newDistance = euclideanDistance.distance(clusterA.get(i), clusterB.get(j));
                 if (linkType == SINGLE && newDistance < distance) {
                     distance = newDistance;
                 } else if (linkType == COMPLETE && newDistance > distance) {
