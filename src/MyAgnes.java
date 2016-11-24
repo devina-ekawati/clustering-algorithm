@@ -1,184 +1,138 @@
-import weka.classifiers.evaluation.Evaluation;
 import weka.clusterers.AbstractClusterer;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.Clusterer;
-import weka.core.Capabilities;
 import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
-import weka.core.pmml.Array;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
 
 /**
  * Created by Tifani on 11/19/2016.
  */
 public class MyAgnes extends AbstractClusterer {
     /** link types */
-    final static int SINGLE = 0;
-    final static int COMPLETE = 1;
-    final static int NUM_CLUSTER = 2;
+    public static final int SINGLE = 0;
+    public static final int COMPLETE = 1;
 
-    int linkType = SINGLE;
-    ArrayList<ArrayList<ArrayList<Instance>>> clustersHierarchy = new ArrayList<>();
+    private int numCluster = 2;
+    private int linkType = SINGLE;
+    private Instances instances;
+
+    private int nCurrentCluster;
+    private EuclideanDistance euclideanDistance;
+    private ArrayList<ArrayList<Integer>> clusters;
+    private ArrayList<Node> hierarchy;
+
+    private ArrayList<ArrayList<ArrayList<Instance>>> clustersHierarchy = new ArrayList<>();
     //DIST HashMap<Instance, HashMap<Instance, Double>> distanceMatrix;
-    EuclideanDistance euclideanDistance;
 
-    public int getLinkType() {
-        return linkType;
+    public MyAgnes(int numCluster, int linkType) {
+        this.numCluster = Math.max(1, numCluster);
+        this.linkType = linkType;
     }
 
     @Override
     public void buildClusterer(Instances instances) throws Exception {
-        ArrayList<ArrayList<Instance>> clusters = new ArrayList<>();
+        this.instances = instances;
+        nCurrentCluster = instances.numInstances();
+        if (nCurrentCluster == 0) return; //no data
 
-        // Initialize cluster and distance matrix
-        for(Instance instance : instances) {
-            clusters.add(new ArrayList<>(Arrays.asList(instance)));
+        this.euclideanDistance = new EuclideanDistance(instances);
+        clusters = new ArrayList<>(nCurrentCluster);
+        hierarchy = new ArrayList<>(nCurrentCluster);
+        for(int i=0; i<nCurrentCluster; i++) {
+            ArrayList<Integer> currentCluster = new ArrayList<>();
+            currentCluster.add(i);
+            clusters.add(currentCluster);
+            Node node = new Node();
+            node.leftInstance = i;
+            System.out.println("Node Awal ke-"+ i + ": " + node.toString(instances.classIndex()));
+            System.out.println("Index instance: " + node.leftInstance);
+            hierarchy.add(node);
         }
-
-        euclideanDistance = new EuclideanDistance(instances);
-        //DIST distanceMatrix = calculateDistanceMatrix(instances);
-        joinNeighbor(clusters);
+        System.out.println();
+        System.out.println();
+        combineCluster();
     }
 
-    private HashMap<Instance, HashMap<Instance, Double>> calculateDistanceMatrix(Instances instances) {
-        System.out.println("Calculate distance matrix");
-        HashMap<Instance, HashMap<Instance, Double>> distanceMatrix = new HashMap<>();
-        for(int i=0; i<instances.size(); i++) {
-            Instance instanceA = instances.get(i);
-            distanceMatrix.put(instanceA, new HashMap<>());
-            for(int j=0; j<i; j++) {
-                Instance instanceB = instances.get(j);
-                HashMap<Instance, Double> neighbors = distanceMatrix.get(instanceA);
-                neighbors.put(instanceB, distanceMatrix.get(instanceB).get(instanceA));
-                distanceMatrix.put(instanceA, neighbors);
-            }
-            for(int j=i; j<instances.size(); j++) {
-                Instance instanceB = instances.get(j);
-                double distance = calculateDistance(instanceA, instanceB);
-                HashMap<Instance, Double> neighbors = distanceMatrix.get(instanceA);
-                neighbors.put(instanceB, distance);
-                distanceMatrix.put(instanceA, neighbors);
-            }
-        }
-        return distanceMatrix;
+    @Override
+    public int numberOfClusters() throws Exception {
+        return numCluster;
     }
 
-    private double calculateDistance(Instance instanceA, Instance instanceB) {
-        // System.out.println("Calculate distance: " + instanceA.toString() + " - " + instanceB.toString());
-        double diff = 0;
-        for(int i=0; i<instanceA.numAttributes(); i++) {
-            if (instanceA.value(i) != instanceB.value(i)) {
-                diff = diff + Math.pow(1, 2); // TODO: numerik
-            }
-        }
-        return Math.sqrt(diff);
-    }
+    private void combineCluster() throws Exception {
+        System.out.println("Current cluster: " + nCurrentCluster);
+        int clusterA = 0;
+        int clusterB = 1;
+        double minDistance = calculateClusterDistance(clusters.get(clusterA), clusters.get(clusterB));
 
-    private void joinNeighbor(ArrayList<ArrayList<Instance>> clusters) {
-        // System.out.println("Join neighbor");
-        clustersHierarchy.add(clusters);
-
-        if(clusters.size() > 1) {
-            int clusterAMin = 0;
-            int clusterBMin = 1;
-            double minDistance = calculateClusterDistance(clusters.get(clusterAMin), clusters.get(clusterBMin));
-
-            for(int i=0; i<clusters.size()-1; i++) {
-                for (int j=i+1; j<clusters.size(); j++) {
-                    double newDistance = calculateClusterDistance(clusters.get(i), clusters.get(j));
-                    if (newDistance < minDistance) {
-                        minDistance = newDistance;
-                        clusterAMin = i;
-                        clusterBMin = j;
-                    }
+        for(int i=0; i<clusters.size()-1; i++) {
+            for (int j=i+1; j<clusters.size(); j++) {
+                double newDistance = calculateClusterDistance(clusters.get(i), clusters.get(j));
+                if (newDistance <= minDistance) {
+                    minDistance = newDistance;
+                    clusterA = i;
+                    clusterB = j;
                 }
             }
+        }
 
-            // join cluster
-            ArrayList<ArrayList<Instance>> upperClusters = new ArrayList<>();
-            for(int i=0; i<clusters.size(); i++) {
-                if (i == clusterBMin) {
-                    ArrayList newCluster = upperClusters.get(clusterAMin);
-                    for(Instance instance : clusters.get(i)) {
-                        newCluster.add(instance);
-                    }
-                } else {
-                    ArrayList newCluster = new ArrayList();
-                    for(Instance instance : clusters.get(i)) {
-                        newCluster.add(instance);
-                    }
-                    upperClusters.add(newCluster);
-                }
-            }
+        // combine cluster
+        Node nodeA = hierarchy.get(clusterA);
+        Node nodeB = hierarchy.get(clusterB);
+        ArrayList<Integer> clusterMemberA = clusters.get(clusterA);
+        ArrayList<Integer> clusterMemberB = clusters.get(clusterB);
 
-            joinNeighbor(upperClusters);
+        // node
+        Node parent = new Node(nodeA, nodeB, minDistance);
+        System.out.println("Join ID: " + clusterA + ", " + clusterB);
+        System.out.println("Distance: " + minDistance);
+        System.out.print("Cluster " + clusterA + ": " + nodeA.toString(instances.classIndex()));
+            if (nodeA.isLeaf()) System.out.println(" (Node)"); else System.out.println(" (Bukan Node");
+        System.out.println("Index instance: " + nodeA.leftInstance);
+        System.out.print("Cluster " + clusterB + ": " + nodeB.toString(instances.classIndex()));
+            if (nodeB.isLeaf()) System.out.println(" (Node)"); else System.out.println(" (Bukan Node");
+        System.out.println("Index instance: " + nodeB.leftInstance);
+        System.out.println("New Parent: " + parent.toString(instances.classIndex()));
+        if (parent.left == null) System.out.println("Parent.leftInstance: " + parent.leftInstance);
+            else System.out.println("Parent.left:  " + parent.left.toString(instances.classIndex()));
+        if (parent.right == null) System.out.println("Parent.rightInstance: " + parent.rightInstance);
+            else System.out.println("Parent.right: " + parent.right.toString(instances.classIndex()));
+        System.out.println();
+        hierarchy.set(clusterA, parent);
+        hierarchy.remove(clusterB);
+
+        // cluster
+        for(Integer instanceID: clusterMemberB) {
+            clusterMemberA.add(instanceID);
+        }
+        clusters.remove(clusterMemberB);
+        nCurrentCluster--;
+
+        if (nCurrentCluster > numberOfClusters()) {
+            combineCluster();
         } else {
-            ArrayList<ArrayList<Instance>> cluster2 = null;
-            try {
-                cluster2 = clustersHierarchy.get(clustersHierarchy.size()-numberOfClusters());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            for(int j=0; j<cluster2.size(); j++) {
-                ArrayList<Instance> currentCluster = cluster2.get(j);
-                System.out.println("Cluster-" + j);
-                for(int k=0; k<currentCluster.size(); k++) {
-                    System.out.println("    " + currentCluster.get(k).toString());
-                }
-            }
+            System.out.println("Vector ID Size: " + clusters.size());
+            System.out.println("Hierarchy Size: " + hierarchy.size());
         }
     }
 
-    public void printHierarchy() throws IOException {
-        FileWriter fw = new FileWriter("result.txt");
-        PrintWriter pw = new PrintWriter(fw);
-        for(int i=0; i<clustersHierarchy.size(); i++) {
-            System.out.println("Hierarchy: " + i);
-            pw.println("Hierarchy: " + i);
-            for(int j=0; j<clustersHierarchy.get(i).size(); j++) {
-                ArrayList<Instance> currentCluster = clustersHierarchy.get(i).get(j);
-                System.out.println("Cluster-" + j);
-                pw.println("Cluster-" + j);
-                for(int k=0; k<currentCluster.size(); k++) {
-                    System.out.println("    " + currentCluster.get(k).toString());
-                    pw.println("    " + currentCluster.get(k).toString());
-                }
-            }
-            System.out.println();
-            pw.println();
-        }
-        pw.flush();
-        pw.close();
-        fw.close();
-    }
-
-    private double calculateClusterDistance(ArrayList<Instance> clusterA, ArrayList<Instance> clusterB) {
-        // System.out.println("Calculate cluster distance");
-//        double distance = distanceMatrix.get(clusterA.get(0)).get(clusterB.get(0));
-//        for(int i=0; i<clusterA.size(); i++) {
-//            for(int j=0; j<clusterB.size(); j++) {
-//                double newDistance = distanceMatrix.get(clusterA.get(i)).get(clusterB.get(j));
-//                if (linkType == SINGLE && newDistance < distance) {
-//                    distance = newDistance;
-//                } else if (linkType == COMPLETE && newDistance > distance) {
-//                    distance = newDistance;
-//                }
-//            }
-//        }
-        double distance = euclideanDistance.distance(clusterA.get(0), clusterB.get(0));
+    private double calculateClusterDistance(ArrayList<Integer> clusterA, ArrayList<Integer> clusterB) {
+        double distance = euclideanDistance.distance(
+                instances.instance(clusterA.get(0)),
+                instances.instance(clusterB.get(0)));
         for(int i=0; i<clusterA.size(); i++) {
             for(int j=0; j<clusterB.size(); j++) {
-                double newDistance = euclideanDistance.distance(clusterA.get(i), clusterB.get(j));
+                double newDistance = euclideanDistance.distance(
+                        instances.instance(clusterA.get(i)),
+                        instances.instance(clusterB.get(j)));
                 if (linkType == SINGLE && newDistance < distance) {
                     distance = newDistance;
                 } else if (linkType == COMPLETE && newDistance > distance) {
@@ -191,12 +145,12 @@ public class MyAgnes extends AbstractClusterer {
 
     @Override
     public int clusterInstance(Instance instance) throws Exception {
-        if (clustersHierarchy.size() == 0) {
+        if (clusters.size() == 0) {
             return 0;
         } else {
-            ArrayList<ArrayList<Instance>> clusters = clustersHierarchy.get(clustersHierarchy.size()-numberOfClusters());
-            ArrayList<Instance> newCluster = new ArrayList<>();
-            newCluster.add(instance);
+            ArrayList<Integer> newCluster = new ArrayList<>();
+            newCluster.add(instances.size());
+            instances.add(instances.size(), instance);
             double distance = calculateClusterDistance(newCluster, clusters.get(0));
             int cluster = 0;
             for(int i=0; i<clusters.size(); i++) {
@@ -206,39 +160,40 @@ public class MyAgnes extends AbstractClusterer {
                     cluster = i;
                 }
             }
+            instances.delete(instances.size()-1);
             return cluster;
         }
     }
 
     @Override
-    public double[] distributionForInstance(Instance instance) throws Exception {
-        if (numberOfClusters() == 0) {
-            double[] p = new double[1];
-            p[0] = 1;
-            return p;
+    public String toString() {
+        int attIdx = instances.classIndex();
+        StringBuffer stringBuffer = new StringBuffer();
+        try {
+            if (numberOfClusters() > 0) {
+                for(int i=0; i<hierarchy.size(); i++) {
+                    if (hierarchy.get(i) != null) {
+                        stringBuffer.append("Cluster " + i + "\n");
+                        stringBuffer.append(hierarchy.get(i).toString(attIdx));
+                        stringBuffer.append("\n\n");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        double[] p = new double[numberOfClusters()];
-        p[clusterInstance(instance)] = 1.0;
-        return p;
-    }
-
-    @Override
-    public int numberOfClusters() throws Exception {
-        return NUM_CLUSTER;
+        return stringBuffer.toString();
     }
 
     public static void main(String[] args) throws Exception {
-        Instances data = loadData("data/iris.arff");
-        MyAgnes myAgnes = new MyAgnes();
+        Instances data = loadData("data/breast-cancer.arff");
 
         ClusterEvaluation eval = new ClusterEvaluation();
-        Clusterer clusterer = AbstractClusterer.makeCopy(myAgnes);
+        Clusterer clusterer = new MyAgnes(2, MyAgnes.SINGLE);
+        clusterer.buildClusterer(data);
 
-        eval.setClusterer(clusterer); // TODO: di sini sininya kayanya masih kobam, either si myagnesnya ga kebuild hierarchynya atau classify instancenya error @_@
-        myAgnes.buildClusterer(data);
+        eval.setClusterer(clusterer);
         eval.evaluateClusterer(data);
-
-        System.out.println("NUMCLUSTER: " + eval.getNumClusters());
 
         System.out.println();
         System.out.println();
@@ -264,5 +219,88 @@ public class MyAgnes extends AbstractClusterer {
         }
 
         return data;
+    }
+
+    class Node {
+        Node left = null;
+        Node right = null;
+        Node parent = null;
+        int leftInstance;
+        int rightInstance;
+        double leftDistance = 0;
+        double rightDistance = 0;
+        double position = 0;
+
+        public Node() {
+
+        }
+
+        public Node(Node left, Node right, double distance) {
+            if (left.isLeaf()) {
+                System.out.println("#left is node: " + left.leftInstance);
+                this.leftInstance = left.leftInstance;
+                this.leftDistance = distance;
+            } else {
+                this.left = left;
+                this.left.parent = this;
+                this.leftDistance = distance - left.position;
+            }
+
+            if (right.isLeaf()) {
+                System.out.println("#right is node " + right.leftInstance);
+                this.rightInstance = right.leftInstance;
+                this.rightDistance = distance;
+            } else {
+                this.right = right;
+                this.right.parent = this;
+                this.rightDistance = distance - right.position;
+            }
+
+            this.position = distance;
+        }
+
+        private boolean isLeaf() {
+            return (position == 0);
+        }
+
+        public String toString(int attIndex) {
+            NumberFormat nf = NumberFormat.getNumberInstance(new Locale("en", "US"));
+            DecimalFormat decimalFormat = (DecimalFormat) nf;
+            decimalFormat.applyPattern("#.#####");
+            
+            if (parent == null && left == null && right ==null) {
+                return "("
+                        + instances.instance(leftInstance).value(attIndex) + ":"
+                        + decimalFormat.format(leftDistance) + ")";
+            }
+            
+            if (left == null) {
+                if (right == null) { // left == null, right == null
+                    return "("
+                            + instances.instance(leftInstance).value(attIndex) + ":"
+                            + decimalFormat.format(leftDistance) + ","
+                            + instances.instance(rightInstance).value(attIndex)
+                            + ":" + decimalFormat.format(rightDistance) + ")";
+                } else { // left == null, right != null
+                    return "("
+                            + instances.instance(leftInstance).value(attIndex) + ":"
+                            + decimalFormat.format(leftDistance) + ","
+                            + right.toString(attIndex) + ":"
+                            + decimalFormat.format(rightDistance) + ")";
+                }
+            } else {
+                if (right == null) { // left != null, right == null
+                    return "(" + left.toString(attIndex) + ":"
+                            + decimalFormat.format(leftDistance) + ","
+                            + instances.instance(rightInstance).value(attIndex)
+                            + ":" + decimalFormat.format(rightDistance) + ")";
+                } else { // left != null, right != null
+                    return "(" + left.toString(attIndex) + ":"
+                            + decimalFormat.format(leftDistance) + ","
+                            + right.toString(attIndex) + ":"
+                            + decimalFormat.format(rightDistance) + ")";
+                }
+            }
+        }
     }
 }
