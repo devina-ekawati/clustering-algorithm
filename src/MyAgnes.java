@@ -53,12 +53,8 @@ public class MyAgnes extends AbstractClusterer {
             clusters.add(currentCluster);
             Node node = new Node();
             node.leftInstance = i;
-            System.out.println("Node Awal ke-"+ i + ": " + node.toString(instances.classIndex()));
-            System.out.println("Index instance: " + node.leftInstance);
             hierarchy.add(node);
         }
-        System.out.println();
-        System.out.println();
         combineCluster();
     }
 
@@ -68,7 +64,6 @@ public class MyAgnes extends AbstractClusterer {
     }
 
     private void combineCluster() throws Exception {
-        System.out.println("Current cluster: " + nCurrentCluster);
         int clusterA = 0;
         int clusterB = 1;
         double minDistance = calculateClusterDistance(clusters.get(clusterA), clusters.get(clusterB));
@@ -92,20 +87,6 @@ public class MyAgnes extends AbstractClusterer {
 
         // node
         Node parent = new Node(nodeA, nodeB, minDistance);
-        System.out.println("Join ID: " + clusterA + ", " + clusterB);
-        System.out.println("Distance: " + minDistance);
-        System.out.print("Cluster " + clusterA + ": " + nodeA.toString(instances.classIndex()));
-            if (nodeA.isLeaf()) System.out.println(" (Node)"); else System.out.println(" (Bukan Node");
-        System.out.println("Index instance: " + nodeA.leftInstance);
-        System.out.print("Cluster " + clusterB + ": " + nodeB.toString(instances.classIndex()));
-            if (nodeB.isLeaf()) System.out.println(" (Node)"); else System.out.println(" (Bukan Node");
-        System.out.println("Index instance: " + nodeB.leftInstance);
-        System.out.println("New Parent: " + parent.toString(instances.classIndex()));
-        if (parent.left == null) System.out.println("Parent.leftInstance: " + parent.leftInstance);
-            else System.out.println("Parent.left:  " + parent.left.toString(instances.classIndex()));
-        if (parent.right == null) System.out.println("Parent.rightInstance: " + parent.rightInstance);
-            else System.out.println("Parent.right: " + parent.right.toString(instances.classIndex()));
-        System.out.println();
         hierarchy.set(clusterA, parent);
         hierarchy.remove(clusterB);
 
@@ -118,9 +99,6 @@ public class MyAgnes extends AbstractClusterer {
 
         if (nCurrentCluster > numberOfClusters()) {
             combineCluster();
-        } else {
-            System.out.println("Vector ID Size: " + clusters.size());
-            System.out.println("Hierarchy Size: " + hierarchy.size());
         }
     }
 
@@ -237,7 +215,6 @@ public class MyAgnes extends AbstractClusterer {
 
         public Node(Node left, Node right, double distance) {
             if (left.isLeaf()) {
-                System.out.println("#left is node: " + left.leftInstance);
                 this.leftInstance = left.leftInstance;
                 this.leftDistance = distance;
             } else {
@@ -247,7 +224,6 @@ public class MyAgnes extends AbstractClusterer {
             }
 
             if (right.isLeaf()) {
-                System.out.println("#right is node " + right.leftInstance);
                 this.rightInstance = right.leftInstance;
                 this.rightDistance = distance;
             } else {
