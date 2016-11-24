@@ -132,7 +132,18 @@ public class MyKMeans extends AbstractClusterer {
     public String toString() {
         StringBuffer stringBuffer = new StringBuffer();
         for (Instance key : cluster.keySet()) {
-            stringBuffer.append("Centroid: " + key + "\n");
+            StringBuffer instance = new StringBuffer();
+            for (int i = 0; i < key.numAttributes(); i++) {
+                if (this.instances.attribute(i).isNominal()) {
+                    instance.append(this.instances.attribute(i).value((int) key.value(i)));
+                } else {
+                    instance.append(key.value(i));
+                }
+                if (i < key.numAttributes() - 1) {
+                    instance.append(",");
+                }
+            }
+            stringBuffer.append("Centroid: " + instance + "\n");
             for (Integer value : cluster.get(key)) {
                 stringBuffer.append("\t" + instances.instance(value) + "\n");
             }
