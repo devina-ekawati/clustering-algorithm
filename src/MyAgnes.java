@@ -30,9 +30,6 @@ public class MyAgnes extends AbstractClusterer {
     private ArrayList<ArrayList<Integer>> clusters;
     private ArrayList<Node> hierarchy;
 
-    private ArrayList<ArrayList<ArrayList<Instance>>> clustersHierarchy = new ArrayList<>();
-    //DIST HashMap<Instance, HashMap<Instance, Double>> distanceMatrix;
-
     public MyAgnes(int numCluster, int linkType) {
         this.numCluster = Math.max(1, numCluster);
         this.linkType = linkType;
@@ -151,11 +148,21 @@ public class MyAgnes extends AbstractClusterer {
             if (numberOfClusters() > 0) {
                 for(int i=0; i<hierarchy.size(); i++) {
                     if (hierarchy.get(i) != null) {
-                        stringBuffer.append("Cluster " + i + "\n");
-                        stringBuffer.append(hierarchy.get(i).toString(attIdx));
-                        stringBuffer.append("\n\n");
+                        String result = hierarchy.get(i).toString(attIdx);
+                        if (result != null) {
+                            stringBuffer.append("Cluster " + i + ": [");
+                            stringBuffer.append(clusters.get(i).get(0));
+                            for(int j=1; j<clusters.get(i).size(); j++) {
+                                stringBuffer.append(", ");
+                                stringBuffer.append(clusters.get(i).get(j));
+                            }
+                            stringBuffer.append("]\n");
+                            stringBuffer.append(result);
+                            stringBuffer.append("\n\n");
+                        }
                     }
                 }
+                stringBuffer.append("\n");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -207,11 +214,9 @@ public class MyAgnes extends AbstractClusterer {
             NumberFormat nf = NumberFormat.getNumberInstance(new Locale("en", "US"));
             DecimalFormat decimalFormat = (DecimalFormat) nf;
             decimalFormat.applyPattern("#.#####");
-            
+
             if (parent == null && left == null && right ==null) {
-                return "("
-                        + instances.instance(leftInstance).value(attIndex) + ":"
-                        + decimalFormat.format(leftDistance) + ")";
+                return null;
             }
             
             if (left == null) {
