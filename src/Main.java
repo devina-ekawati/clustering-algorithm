@@ -1,11 +1,23 @@
+import weka.clusterers.ClusterEvaluation;
+import weka.clusterers.Clusterer;
+import weka.clusterers.HierarchicalClusterer;
 import weka.core.Instances;
+import weka.core.Option;
 import weka.core.converters.ConverterUtils;
 
 /**
  * Created by Devina Ekawati on 11/19/2016.
  */
 public class Main {
-    public Instances loadData(String filename) {
+    public static final String BASE_PATH = "data/";
+    public static final String DATASET_BREASTCANCER = "breast-cancer.arff";
+    public static final String DATASET_CONTACTLENNSES = "contact-lenses.arff";
+    public static final String DATASET_GURU = "guru.arff";
+    public static final String DATASET_IRIS = "iris.arrf";
+    public static final String DATASET_WEATHERNOMINAL = "weather.nominal.arff";
+    public static final String DATASET_WEATHERNUMERIC = "weather.numeric.arff";
+
+    private static Instances loadData(String filename) {
         ConverterUtils.DataSource source;
         Instances data = null;
         try {
@@ -22,15 +34,83 @@ public class Main {
         return data;
     }
 
+    public static void testAgnesWeka(String datapath, int numCluster, int linkType) throws Exception {
+        System.out.println("============= AGNES WEKA ===========");
+        System.out.println();
+        System.out.println("Data: \"" + datapath + "\"");
+
+        Instances data = loadData(datapath);
+
+        ClusterEvaluation eval = new ClusterEvaluation();
+        Clusterer clusterer = new HierarchicalClusterer();
+        ((HierarchicalClusterer) clusterer).setNumClusters(numCluster);
+        switch (linkType) {
+            case MyAgnes.SINGLE:
+                ((HierarchicalClusterer) clusterer).setOptions(new String[] {"-L", "SINGLE"});
+                break;
+            case MyAgnes.COMPLETE:
+                ((HierarchicalClusterer) clusterer).setOptions(new String[] {"-L", "COMPLETE"});
+                break;
+        }
+        clusterer.buildClusterer(data);
+
+        eval.setClusterer(clusterer);
+        eval.evaluateClusterer(data);
+
+        System.out.println();
+
+        System.out.println("Results");
+        System.out.println("=======");
+        System.out.println(eval.clusterResultsToString());
+    }
+
+    public static void testMyAgnes(String datapath, int numCluster, int linkType) throws Exception {
+        System.out.println("=============== MY AGNES ===============");
+        System.out.println();
+        System.out.println("Data: \"" + datapath + "\"");
+        Instances data = loadData(datapath);
+
+        ClusterEvaluation eval = new ClusterEvaluation();
+        Clusterer clusterer = new MyAgnes(numCluster, linkType);
+        clusterer.buildClusterer(data);
+
+        eval.setClusterer(clusterer);
+        eval.evaluateClusterer(data);
+
+        System.out.println();
+
+        System.out.println("Results");
+        System.out.println("=======");
+        System.out.println(eval.clusterResultsToString());
+    }
+
+    public static void testMyKMeans(String datapath, int k) throws Exception{
+        System.out.println("============= MY K-MEANS ===========");
+        System.out.println();
+        System.out.println("Data: \"" + datapath + "\"");
+
+        Instances data = loadData(datapath);
+
+        ClusterEvaluation eval = new ClusterEvaluation();
+        Clusterer clusterer = new MyKMeans(k);
+        clusterer.buildClusterer(data);
+
+        eval.setClusterer(clusterer);
+        eval.evaluateClusterer(data);
+
+        System.out.println();
+
+        System.out.println("Results");
+        System.out.println("=======");
+        System.out.println(eval.clusterResultsToString());
+    }
+
     public static void main(String args[]) {
-        Main m = new Main();
-
-        Instances data = m.loadData("data/weather.nominal.arff");
-
-        MyKMeans kmeans = new MyKMeans(2);
-
         try {
-            kmeans.buildClusterer(data);
+            Main.testMyKMeans(BASE_PATH + DATASET_WEATHERNOMINAL, 2);
+            // Main.testAgnesWeka(BASE_PATH + DATASET_WEATHERNOMINAL, 2, MyAgnes.SINGLE);
+            // Main.testMyAgnes(BASE_PATH + DATASET_WEATHERNOMINAL, 2, MyAgnes.SINGLE);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
