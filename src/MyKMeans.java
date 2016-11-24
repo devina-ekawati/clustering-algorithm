@@ -9,6 +9,8 @@ import java.util.*;
 public class MyKMeans extends AbstractClusterer {
     private int k;
     private HashMap<Instance, ArrayList<Integer>> cluster;
+    private EuclideanDistance euclideanDistance;
+    private Instances instances;
 
     public MyKMeans(int k) {
         this.k = k;
@@ -37,9 +39,13 @@ public class MyKMeans extends AbstractClusterer {
 
     @Override
     public void buildClusterer(Instances data) throws Exception {
+        this.instances = data;
         cluster = new HashMap<>();
+
         ArrayList<Instance> seeds = new ArrayList<>();
         ArrayList<Integer> intialSeedsIdx = initSeeds(data);
+        euclideanDistance = new EuclideanDistance(data);
+
 
         for (int i = 0; i < intialSeedsIdx.size(); i++) {
             seeds.add(data.instance(intialSeedsIdx.get(i)));
@@ -88,6 +94,8 @@ public class MyKMeans extends AbstractClusterer {
 
             newCluster = clusterInstances(data,newSeeds,newCluster);
 
+            System.out.println();
+            System.out.println();
             for (Instance key : newCluster.keySet()) {
                 System.out.println("New Cluster: " + key);
                 for (Integer value : newCluster.get(key)) {
@@ -102,8 +110,26 @@ public class MyKMeans extends AbstractClusterer {
         } while (cek);
     }
 
+    @Override
+    public int clusterInstance(Instance instance) throws Exception {
+        double minDistance = Double.MAX_VALUE;
+        int clusterID = 0;
+        int minClusterID = clusterID;
+
+        for (Instance key : cluster.keySet()) {
+            for (Integer value : cluster.get(key)) {
+                double newDistance = euclideanDistance.distance(instance, instances.instance(value));
+                if (newDistance < minDistance) {
+                    minClusterID = clusterID;
+                    minDistance = newDistance;
+                }
+            }
+            clusterID++;
+        }
+        return minClusterID;
+    }
+
     private HashMap<Instance, ArrayList<Integer>> clusterInstances(Instances data, ArrayList<Instance> seeds, HashMap<Instance, ArrayList<Integer>> newCluster) {
-        EuclideanDistance euclideanDistance = new EuclideanDistance(data);
         for (int i = 0; i < data.numInstances(); i++) {
 //                System.out.println("-------Instance ke " + i + " -------");
 
