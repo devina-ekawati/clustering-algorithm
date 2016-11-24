@@ -20,7 +20,7 @@ public class MyKMeans extends AbstractClusterer {
         Random random = new Random();
         ArrayList<Integer> seeds = new ArrayList<>();
 
-        System.out.print("Initial seeds: ");
+//        System.out.print("Initial seeds: ");
         while (seeds.size() < k) {
             Integer next;
             do {
@@ -29,10 +29,10 @@ public class MyKMeans extends AbstractClusterer {
 
             seeds.add(next);
         }
-        for (Integer seed : seeds) {
-            System.out.print(seed + " ");
-        }
-        System.out.println();
+//        for (Integer seed : seeds) {
+//            System.out.print(seed + " ");
+//        }
+//        System.out.println();
 
         return seeds;
     }
@@ -67,10 +67,10 @@ public class MyKMeans extends AbstractClusterer {
             ArrayList<Instance> newSeeds = new ArrayList<>();
 
             for (Instance key : cluster.keySet()) {
-                System.out.println("Cluster: " + key);
-                for (Integer value : cluster.get(key)) {
-                    System.out.println("\t" + value + " ");
-                }
+//                System.out.println("Cluster: " + key);
+//                for (Integer value : cluster.get(key)) {
+//                    System.out.println("\t" + value + " ");
+//                }
 
                 Instance newInstance = new DenseInstance(data.numAttributes());
 
@@ -83,7 +83,7 @@ public class MyKMeans extends AbstractClusterer {
                     }
                 }
 
-                System.out.println(newInstance);
+//                System.out.println(newInstance);
 
                 newSeeds.add(newInstance);
             }
@@ -94,14 +94,14 @@ public class MyKMeans extends AbstractClusterer {
 
             newCluster = clusterInstances(data,newSeeds,newCluster);
 
-            System.out.println();
-            System.out.println();
-            for (Instance key : newCluster.keySet()) {
-                System.out.println("New Cluster: " + key);
-                for (Integer value : newCluster.get(key)) {
-                    System.out.println("\t" + value + " ");
-                }
-            }
+//            System.out.println();
+//            System.out.println();
+//            for (Instance key : newCluster.keySet()) {
+//                System.out.println("New Cluster: " + key);
+//                for (Integer value : newCluster.get(key)) {
+//                    System.out.println("\t" + value + " ");
+//                }
+//            }
 
             if (isClustersEquals(cluster, newCluster) || iteration == 500) {
                 cluster = new HashMap<>(newCluster);
@@ -127,6 +127,17 @@ public class MyKMeans extends AbstractClusterer {
             clusterID++;
         }
         return minClusterID;
+    }
+
+    public String toString() {
+        StringBuffer stringBuffer = new StringBuffer();
+        for (Instance key : cluster.keySet()) {
+            stringBuffer.append("Centroid: " + key + "\n");
+            for (Integer value : cluster.get(key)) {
+                stringBuffer.append("\t" + instances.instance(value) + "\n");
+            }
+        }
+        return stringBuffer.toString();
     }
 
     private HashMap<Instance, ArrayList<Integer>> clusterInstances(Instances data, ArrayList<Instance> seeds, HashMap<Instance, ArrayList<Integer>> newCluster) {
