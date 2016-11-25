@@ -29,7 +29,7 @@ public class Main {
             // For example, the XRFF format saves the class attribute information as well
             if (data.classIndex() == -1)
 //                data.setClassIndex(data.numAttributes() - 1);
-                data.setClassIndex(1);
+                data.setClassIndex(0);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,69 +115,8 @@ public class Main {
 
     public static void main(String args[]) {
         try {
-            Scanner sc = new Scanner(System.in);
-            System.out.println("=== ALGORITHM ===");
-            System.out.println("1. MyAgnes");
-            System.out.println("2. MyKMeans");
-            System.out.print("Algorithm: ");
-            int algorithm = sc.nextInt();
-            System.out.println();
-
-            System.out.println("=== DATASET ===");
-            System.out.println("1. breast-cancer.arff");
-            System.out.println("2. contant-lenses.arff");
-            System.out.println("3. iris.arrf");
-            System.out.println("4. weather.nominal.arrf");
-            System.out.println("5. weather.numeric.arrf");
-            System.out.println("6. criminal.arrf");
-            System.out.print("Dataset: ");
-            int dataset = sc.nextInt();
-            System.out.println();
-
-            String dataPath = BASE_PATH;
-            switch (dataset) {
-                case 1:
-                    dataPath = dataPath + DATASET_BREASTCANCER;
-                    break;
-                case 2:
-                    dataPath = dataPath + DATASET_CONTACTLENNSES;
-                    break;
-                case 3:
-                    dataPath = dataPath + DATASET_IRIS;
-                    break;
-                case 4:
-                    dataPath = dataPath + DATASET_WEATHERNOMINAL;
-                    break;
-                case 5:
-                    dataPath = dataPath + DATASET_WEATHERNUMERIC;
-                    break;
-                case 6:
-                    dataPath = dataPath + DATASET_CRIMINAL;
-                    break;
-            }
-
-            if (algorithm == 1) {
-                System.out.print("Number of cluster: ");
-                int numCluster = sc.nextInt();
-                System.out.println();
-
-                System.out.println("=== LINK TYPE ===");
-                System.out.println("1. Singe-link");
-                System.out.println("2. Complete-link");
-                System.out.println("");
-                System.out.print("Link: ");
-                int link = sc.nextInt();
-                System.out.println();
-
-                if(link == 1) link = MyAgnes.SINGLE;
-                else if (link == 2) link = MyAgnes.COMPLETE;
-                Main.testMyAgnes(dataPath, numCluster, link);
-            } else if (algorithm == 2) {
-                System.out.print("k: ");
-                int k = sc.nextInt();
-                Main.testMyKMeans(dataPath, k);
-            }
-
+//            Main.testMyAgnes("data/criminal.arff", 6, MyAgnes.SINGLE);
+            Main.testMyKMeans("data/criminal.arff", 2);
 
         } catch (Exception e) {
             e.printStackTrace();
