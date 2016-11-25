@@ -17,6 +17,7 @@ public class Main {
     public static final String DATASET_IRIS = "iris.arff";
     public static final String DATASET_WEATHERNOMINAL = "weather.nominal.arff";
     public static final String DATASET_WEATHERNUMERIC = "weather.numeric.arff";
+    public static final String DATASET_CRIMINAL = "criminal.arff";
 
     private static Instances loadData(String filename) {
         ConverterUtils.DataSource source;
@@ -27,7 +28,8 @@ public class Main {
             // setting class attribute if the data format does not provide this information
             // For example, the XRFF format saves the class attribute information as well
             if (data.classIndex() == -1)
-                data.setClassIndex(data.numAttributes() - 1);
+//                data.setClassIndex(data.numAttributes() - 1);
+                data.setClassIndex(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -127,6 +129,7 @@ public class Main {
             System.out.println("3. iris.arrf");
             System.out.println("4. weather.nominal.arrf");
             System.out.println("5. weather.numeric.arrf");
+            System.out.println("6. criminal.arrf");
             System.out.print("Dataset: ");
             int dataset = sc.nextInt();
             System.out.println();
@@ -147,6 +150,9 @@ public class Main {
                     break;
                 case 5:
                     dataPath = dataPath + DATASET_WEATHERNUMERIC;
+                    break;
+                case 6:
+                    dataPath = dataPath + DATASET_CRIMINAL;
                     break;
             }
 
